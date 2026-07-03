@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --c-bg: rgba(22, 29, 49, 0.7);
+            --c-bd: rgba(255, 255, 255, 0.08);
+            --txt: #f3f4f6;
+            --muted: #9ca3af;
+            --prim: #6366f1;
+            --prim-h: #4f46e5;
+            --ok: #10b981;
+            --err: #ef4444;
+            --warn: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+            color: var(--txt);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        header {
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--c-bd);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header span {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--prim);
+            color: #a5b4fc;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 65px);
+            position: relative;
+        }
+        .side {
+            width: 400px;
+            background: var(--c-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--c-bd);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+            z-index: 5;
+        }
+        .box {
+            background: rgba(17, 24, 39, 0.5);
+            border: 1px solid var(--c-bd);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        .box-t {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #e5e7eb;
+            margin-bottom: 0.75rem;
+        }
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        select, textarea {
+            width: 100%;
+            background: rgba(10, 10, 15, 0.6);
+            border: 1px solid var(--c-bd);
+            border-radius: 6px;
+            color: var(--txt);
+            font-family: inherit;
+            padding: 0.6rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--prim);
+        }
+        textarea {
+            height: 100px;
+            font-family: 'JetBrains Mono', monospace;
+            resize: none;
+            color: #6ee7b7;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--prim);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .btn:hover {
+            background: var(--prim-h);
+            transform: translateY(-1px);
+        }
+        .btn-s {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--txt);
+            margin-top: 0.5rem;
+        }
+        .btn-s:hover { background: rgba(255, 255, 255, 0.15); }
+        .grid {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .pre-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--c-bd);
+            color: #d1d5db;
+            font-family: inherit;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .pre-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--prim);
+            color: white;
+        }
+        .err-card {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: #fca5a5;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            display: none;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .stats {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .stat-b {
+            background: rgba(10, 15, 30, 0.4);
+            border: 1px solid var(--c-bd);
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-v {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #a5b4fc;
+        }
+        .stat-l {
+            font-size: 0.7rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+        .view-panel {
+            flex: 1;
+            position: relative;
+            background: rgba(10, 11, 18, 0.4);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #cv {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        #cv:active { cursor: grabbing; }
+        .pan-ctrls {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .ctrl-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--c-bd);
+            color: var(--txt);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+        .ctrl-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--prim);
+        }
+        .leg {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--c-bd);
+            backdrop-filter: blur(8px);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .leg-i { display: flex; align-items: center; gap: 0.5rem; }
+        .leg-c { width: 12px; height: 12px; border-radius: 50%; }
+        .leg-l { width: 20px; height: 3px; border-radius: 1px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Visualizer</h1>
+        <span id="badge">Auto</span>
+    </header>
+    <div class="main">
+        <div class="side">
+            <div class="box">
+                <div class="box-t">LeetCode Input</div>
+                <label>Presets</label>
+                <div class="grid">
+                    <button class="pre-btn" onclick="ap('edges_unweighted')">Unweighted Edges</button>
+                    <button class="pre-btn" onclick="ap('edges_weighted')">Weighted Edges</button>
+                    <button class="pre-btn" onclick="ap('adj_list')">Adj List</button>
+                    <button class="pre-btn" onclick="ap('adj_matrix')">Adj Matrix</button>
+                </div>
+                <label for="inp">String</label>
+                <textarea id="inp" placeholder="[[...]]"></textarea>
+                <label for="fmt">Format</label>
+                <select id="fmt">
+                    <option value="auto">Auto</option>
+                    <option value="edges">Edges</option>
+                    <option value="adj_list">List</option>
+                    <option value="matrix">Matrix</option>
+                </select>
+                <button class="btn" id="parse-btn">Parse</button>
+            </div>
+            <div class="err-card" id="err-banner"></div>
+            <div class="box">
+                <div class="box-t">Details</div>
+                <div class="stats">
+                    <div class="stat-b">
+                        <div class="stat-v" id="n-cnt">-</div>
+                        <div class="stat-l">Nodes</div>
+                    </div>
+                    <div class="stat-b">
+                        <div class="stat-v" id="e-cnt">-</div>
+                        <div class="stat-l">Edges</div>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div>Format: <span id="det-fmt" style="color: #a5b4fc; text-transform: uppercase;">-</span></div>
+                    <div>Max Val: <span id="max-v">-</span></div>
+                    <div>Weighted: <span id="is-w">-</span></div>
+                </div>
+            </div>
+            <div class="box">
+                <div class="box-t">Controls</div>
+                <button class="btn btn-s" id="reset-p-btn">Recenter</button>
+                <button class="btn btn-s" id="toggle-p-btn">Pause Physics</button>
+            </div>
+        </div>
+        <div class="view-panel">
+            <canvas id="cv"></canvas>
+            <div class="leg">
+                <div class="leg-i">
+                    <div class="leg-c" style="background: var(--prim);"></div>
+                    <span>Node</span>
+                </div>
+                <div class="leg-i">
+                    <div class="leg-l" style="background: rgba(255, 255, 255, 0.25);"></div>
+                    <span>Unweighted</span>
+                </div>
+                <div class="leg-i">
+                    <div class="leg-l" style="background: #fb923c;"></div>
+                    <span>Weighted</span>
+                </div>
+            </div>
+            <div class="pan-ctrls">
+                <button class="ctrl-btn" id="z-in">+</button>
+                <button class="ctrl-btn" id="z-out">-</button>
+                <button class="ctrl-btn" id="z-fit">⛶</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const pr = {
+            edges_unweighted: "[[0,1],[1,2],[2,3],[3,0],[0,2]]",
+            edges_weighted: "[[2,1,1],[2,3,4],[3,4,1],[4,1,7]]",
+            adj_list: "[[1,3],[0,2],[1,3],[0,2]]",
+            adj_matrix: "[[0,1,0,0],[1,0,1,0],[0,1,0,1],[0,0,1,0]]"
+        };
+
+        function ap(n) {
+            document.getElementById('inp').value = pr[n];
+            document.getElementById('err-banner').style.display = 'none';
+        }
+
+        let g = null, n = [], e = [], sr = true, dn = null, sc = 1.0, off = { x: 0, y: 0 }, ip = false, sp = { x: 0, y: 0 };
+        const canvas = document.getElementById('cv');
+        const ctx = canvas.getContext('2d');
+
+        function rc() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            dr();
+        }
+        window.addEventListener('resize', rc);
+
+        function up() {
+            if (!sr || !n.length) return;
+            const w = canvas.width, h = canvas.height;
+            const k = 100, rf = 600, af = 0.06, cg = 0.02;
+
+            for (let i = 0; i < n.length; i++) {
+                for (let j = i + 1; j < n.length; j++) {
+                    const dx = n[i].x - n[j].x;
+                    const dy = n[i].y - n[j].y;
+                    const ds = dx * dx + dy * dy + 0.1;
+                    const d = Math.sqrt(ds);
+                    if (d < 250) {
+                        const f = rf / ds;
+                        const fx = (dx / d) * f, fy = (dy / d) * f;
+                        if (n[i] !== dn) { n[i].vx += fx; n[i].vy += fy; }
+                        if (n[j] !== dn) { n[j].vx -= fx; n[j].vy -= fy; }
+                    }
+                }
+            }
+
+            e.forEach(ed => {
+                const u = n.find(x => x.id === ed.source);
+                const v = n.find(x => x.id === ed.target);
+                if (!u || !v) return;
+                const dx = u.x - v.x;
+                const dy = u.y - v.y;
+                const d = Math.sqrt(dx * dx + dy * dy) || 0.1;
+                const f = (d - k) * af;
+                const fx = (dx / d) * f, fy = (dy / d) * f;
+                if (u !== dn) { u.vx -= fx; u.vy -= fy; }
+                if (v !== dn) { v.vx += fx; v.vy += fy; }
+            });
+
+            const cx = w / 2, cy = h / 2;
+            n.forEach(nd => {
+                if (nd === dn) return;
+                nd.vx += (cx - nd.x) * cg;
+                nd.vy += (cy - nd.y) * cg;
+                nd.x += nd.vx;
+                nd.y += nd.vy;
+                nd.vx *= 0.85;
+                nd.vy *= 0.85;
+            });
+        }
+
+        function dr() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(off.x, off.y);
+            ctx.scale(sc, sc);
+
+            e.forEach(ed => {
+                const u = n.find(x => x.id === ed.source);
+                const v = n.find(x => x.id === ed.target);
+                if (!u || !v) return;
+                ctx.beginPath();
+                ctx.moveTo(u.x, u.y);
+                ctx.lineTo(v.x, v.y);
+                ctx.strokeStyle = ed.weighted ? '#fb923c' : 'rgba(255, 255, 255, 0.15)';
+                ctx.lineWidth = ed.weighted ? 3 : 2;
+                ctx.stroke();
+
+                da(ctx, u.x, u.y, v.x, v.y, 22);
+
+                if (ed.weighted) {
+                    const mx = (u.x + v.x) / 2, my = (u.y + v.y) / 2;
+                    ctx.save();
+                    ctx.font = 'bold 11px "JetBrains Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const ws = ed.weight.toString();
+                    const p = 3;
+                    const bw = ctx.measureText(ws).width + p * 2;
+                    const bh = 14;
+                    ctx.fillStyle = '#1e1b4b';
+                    ctx.strokeStyle = '#fb923c';
+                    ctx.lineWidth = 1;
+                    ctx.fillRect(mx - bw/2, my - bh/2, bw, bh);
+                    ctx.strokeRect(mx - bw/2, my - bh/2, bw, bh);
+                    ctx.fillStyle = '#fb923c';
+                    ctx.fillText(ws, mx, my);
+                    ctx.restore();
+                }
+            });
+
+            n.forEach(nd => {
+                ctx.beginPath();
+                ctx.arc(nd.x, nd.y, 20, 0, 2 * Math.PI);
+                ctx.fillStyle = '#6366f1';
+                ctx.strokeStyle = '#a5b4fc';
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px "Outfit", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(nd.id.toString(), nd.x, nd.y);
+            });
+            ctx.restore();
+        }
+
+        function da(ctx, fx, fy, tx, ty, r) {
+            const dx = tx - fx, dy = ty - fy;
+            const a = Math.atan2(dy, dx);
+            const x = tx - r * Math.cos(a), y = ty - r * Math.sin(a);
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(a);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(-8, -4);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(-8, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function tk() {
+            up();
+            dr();
+            requestAnimationFrame(tk);
+        }
+
+        function lp(g) {
+            n = [];
+            e = g.edges || [];
+            const w = canvas.width || 800, h = canvas.height || 600;
+            const nn = g.nodes ? g.nodes.length : 0;
+
+            if (g.nodes) {
+                g.nodes.forEach((id, i) => {
+                    const a = (i / nn) * 2 * Math.PI;
+                    const r = Math.min(w, h) * 0.25;
+                    n.push({ id: id, x: w/2 + Math.cos(a)*r, y: h/2 + Math.sin(a)*r, vx: 0, vy: 0 });
+                });
+            }
+
+            document.getElementById('n-cnt').innerText = nn;
+            document.getElementById('e-cnt').innerText = e.length;
+            document.getElementById('det-fmt').innerText = g.format_detected || '-';
+            document.getElementById('badge').innerText = g.format_detected || 'Parsed';
+            document.getElementById('max-v').innerText = g.nodes && g.nodes.length ? Math.max(...g.nodes) : 0;
+            document.getElementById('is-w').innerText = e.some(x => x.weighted) ? 'YES' : 'NO';
+            sc = 1.0;
+            off = { x: 0, y: 0 };
+            sr = true;
+            document.getElementById('toggle-p-btn').innerText = "Pause Physics";
+        }
+
+        async function pi() {
+            const raw = document.getElementById('inp').value.trim();
+            const f = document.getElementById('fmt').value;
+            const eb = document.getElementById('err-banner');
+            if (!raw) { se("Empty input."); return; }
+            eb.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: raw, format: f })
+                });
+                const d = await response.json();
+                if (!response.ok || d.error) { se(d.error || "Error"); return; }
+                lp(d);
+            } catch (err) {
+                se("Server connection failed.");
+            }
+        }
+
+        function se(m) {
+            const eb = document.getElementById('err-banner');
+            eb.innerText = m;
+            eb.style.display = 'block';
+        }
+
+        canvas.addEventListener('mousedown', ev => {
+            const r = canvas.getBoundingClientRect();
+            const mx = (ev.clientX - r.left - off.x) / sc;
+            const my = (ev.clientY - r.top - off.y) / sc;
+            let cn = null;
+            for (let i = 0; i < n.length; i++) {
+                const dx = n[i].x - mx, dy = n[i].y - my;
+                if (dx * dx + dy * dy < 20 * 20) { cn = n[i]; break; }
+            }
+            if (cn) { dn = cn; dn.vx = 0; dn.vy = 0; }
+            else { ip = true; sp = { x: ev.clientX - off.x, y: ev.clientY - off.y }; }
+        });
+
+        canvas.addEventListener('mousemove', ev => {
+            if (dn) {
+                const r = canvas.getBoundingClientRect();
+                dn.x = (ev.clientX - r.left - off.x) / sc;
+                dn.y = (ev.clientY - r.top - off.y) / sc;
+                dn.vx = 0; dn.vy = 0;
+            } else if (ip) {
+                off.x = ev.clientX - sp.x;
+                off.y = ev.clientY - sp.y;
+            }
+        });
+
+        window.addEventListener('mouseup', () => { dn = null; ip = false; });
+        document.getElementById('z-in').addEventListener('click', () => { sc *= 1.2; dr(); });
+        document.getElementById('z-out').addEventListener('click', () => { sc /= 1.2; dr(); });
+        document.getElementById('z-fit').addEventListener('click', () => { sc = 1.0; off = { x: 0, y: 0 }; dr(); });
+        document.getElementById('reset-p-btn').addEventListener('click', () => {
+            const w = canvas.width, h = canvas.height;
+            n.forEach((nd, i) => {
+                const a = (i / n.length) * 2 * Math.PI;
+                const r = Math.min(w, h) * 0.25;
+                nd.x = w / 2 + Math.cos(a) * r;
+                nd.y = h / 2 + Math.sin(a) * r;
+                nd.vx = 0; nd.vy = 0;
+            });
+            sc = 1.0; off = { x: 0, y: 0 };
+        });
+        document.getElementById('toggle-p-btn').addEventListener('click', () => {
+            sr = !sr;
+            document.getElementById('toggle-p-btn').innerText = sr ? "Pause Physics" : "Resume Physics";
+        });
+        document.getElementById('parse-btn').addEventListener('click', pi);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            rc();
+            ap('edges_unweighted');
+            tk();
+        });
+    </script>
+</body>
+</html>
