@@ -4,4 +4,4 @@ if (-not (Test-Path $b)) {
 }
 $c = "g++"
 $f = @("-std=c++17", "-O3", "-Wall", "-Wextra")
-& $c $f "p/a.cpp" -o "$b/a.exe"
+& $c $f "graphcpp/a.cpp" -o "$b/a.exe"

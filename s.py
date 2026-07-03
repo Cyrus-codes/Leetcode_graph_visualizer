@@ -31,8 +31,8 @@ class H(BaseHTTPRequestHandler):
         parsed_url = urllib.parse.urlparse(self.path)
         path = parsed_url.path
 
-        if path in ["/", "/index.html", "/v/a.html", "/v/index.html"]:
-            hp = os.path.join(SD, "v", "a.html")
+        if path in ["/", "/index.html", "/visualizer/a.html", "/visualizer/index.html"]:
+            hp = os.path.join(SD, "visualizer", "a.html")
             if not os.path.exists(hp):
                 self.send_error(404)
                 return

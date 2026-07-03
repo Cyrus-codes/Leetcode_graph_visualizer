@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O3 -Wall -Wextra
 BD = bin
-PD = p
+PD = graphcpp
 T = $(BD)/a
 
 .PHONY: all clean dirs
